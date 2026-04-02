@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>老後資金の見える化チェック | Soleil FP</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #1a3a6e;
+  --navy-dark: #122a52;
+  --navy-light: #e8eef7;
+  --navy-pale: #f3f6fb;
+  --accent: #4a7fc1;
+  --text: #1a2638;
+  --text-muted: #5a6a80;
+  --border: #c8d8ea;
+  --white: #ffffff;
+  --bg: #f0f4f9;
+  --shadow: 0 2px 12px rgba(26,58,110,0.10);
+  --green: #2e7d52;
+  --green-light: #e8f5ee;
+  --red: #c62828;
+  --red-light: #fce8e8;
+  --yellow: #b45309;
+  --yellow-light: #fef3e2;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  background: var(--navy);
+  color: white;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(26,58,110,0.3);
+  flex-shrink: 0;
+}
+
+.header-icon {
+  width: 32px; height: 32px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+
+.header-title { font-size: 1rem; font-weight: 700; letter-spacing: 0.02em; }
+.header-sub { font-size: 0.72rem; opacity: 0.8; margin-top: 1px; }
+
+main {
+  flex: 1;
+  max-width: 560px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+}
+
+/* 進捗バー */
+.progress-wrap { margin-bottom: 24px; }
+.progress-info { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.72rem; color: var(--text-muted); }
+.progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--navy); border-radius: 2px; transition: width 0.4s ease; }
+
+/* 質問カード */
+.question-card {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  animation: fadeUp 0.3s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.question-num { font-size: 0.7rem; color: var(--navy); font-weight: 700; letter-spacing: 0.1em; margin-bottom: 8px; }
+.question-text { font-size: 1rem; font-weight: 700; color: var(--text); line-height: 1.6; margin-bottom: 6px; }
+.question-hint { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; background: var(--navy-pale); border-radius: 8px; padding: 10px 12px; border-left: 3px solid var(--accent); }
+
+/* 数値入力 */
+.input-wrap { position: relative; margin-bottom: 12px; }
+.input-wrap input {
+  width: 100%;
+  padding: 14px 60px 14px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--navy-pale);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input-wrap input:focus { border-color: var(--navy); background: white; }
+.input-unit { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: var(--text-muted); pointer-events: none; font-weight: 500; }
+
+.skip-text { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 12px; }
+
+.next-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--navy);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.next-btn:hover { background: var(--navy-dark); }
+
+.back-btn {
+  display: block;
+  margin-top: 12px;
+  background: none;
+  border: none;
+  color: #8a9ab0;
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 4px 0;
+}
+.back-btn:hover { color: var(--text-muted); }
+
+/* 選択肢 */
+.choices { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.choice-btn {
+  background: var(--navy-pale);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+  font-weight: 500;
+}
+.choice-btn:hover { border-color: var(--navy); background: var(--navy-light); color: var(--navy-dark); }
+
+/* ===== 結果画面 ===== */
+.result-screen { display: none; animation: fadeUp 0.5s ease; }
+
+/* メインヒーロー */
+.result-hero {
+  background: var(--navy);
+  border-radius: 16px;
+  padding: 24px 20px;
+  color: white;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.result-hero-label { font-size: 0.72rem; opacity: 0.75; letter-spacing: 0.1em; margin-bottom: 8px; }
+
+.result-hero-amount {
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.result-hero-amount.surplus { color: #7dd8a0; }
+.result-hero-amount.shortage { color: #f9a8a8; }
+
+.result-hero-sub { font-size: 0.8rem; opacity: 0.8; line-height: 1.6; }
+
+/* カードグリッド */
+.cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.info-card {
+  background: white;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.info-card-label { font-size: 0.68rem; color: var(--text-muted); margin-bottom: 4px; line-height: 1.4; }
+.info-card-value { font-size: 1.15rem; font-weight: 700; color: var(--navy); line-height: 1.2; }
+.info-card-unit { font-size: 0.72rem; font-weight: 400; margin-left: 2px; }
+
+/* 改善余地カード */
+.improvement-card {
+  background: white;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.improvement-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 14px;
+  letter-spacing: 0.04em;
+}
+
+.rate-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.rate-row:last-child { border-bottom: none; }
+
+.rate-label { font-size: 0.8rem; color: var(--text-muted); }
+.rate-asset { font-size: 0.95rem; font-weight: 700; color: var(--navy); }
+.rate-gap { font-size: 0.8rem; font-weight: 500; }
+.rate-gap.ok { color: var(--green); }
+.rate-gap.ng { color: var(--red); }
+
+/* 追加積立 */
+.extra-card {
+  background: var(--yellow-light);
+  border-radius: 12px;
+  padding: 14px 16px;
+  border: 1px solid #fcd4a0;
+  margin-bottom: 16px;
+}
+.extra-title { font-size: 0.78rem; font-weight: 700; color: var(--yellow); margin-bottom: 8px; }
+.extra-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.extra-row:last-child { margin-bottom: 0; }
+.extra-label { font-size: 0.78rem; color: var(--text-muted); }
+.extra-value { font-size: 0.9rem; font-weight: 700; color: var(--text); }
+
+/* 参考配分 */
+.allocation-toggle {
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: var(--text-muted);
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: 10px;
+  transition: all 0.2s;
+}
+.allocation-toggle:hover { border-color: var(--navy); color: var(--navy); }
+
+.allocation-panel {
+  display: none;
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.allocation-panel.open { display: block; animation: fadeUp 0.2s ease; }
+
+.allocation-note { font-size: 0.72rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 14px; background: var(--navy-pale); border-radius: 8px; padding: 10px 12px; }
+
+.allocation-row { margin-bottom: 14px; }
+.allocation-row:last-child { margin-bottom: 0; }
+.allocation-name { font-size: 0.8rem; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+.allocation-bars { display: flex; gap: 4px; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 4px; }
+.bar-cash { background: #b0c4de; }
+.bar-bond { background: var(--accent); }
+.bar-stock { background: var(--navy); }
+.allocation-legend { display: flex; gap: 12px; }
+.legend-item { font-size: 0.68rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+/* 注意書き */
+.disclaimer {
+  font-size: 0.7rem;
+  color: #9aacbe;
+  line-height: 1.7;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+/* CTA */
+.cta-card {
+  background: var(--navy);
+  border-radius: 16px;
+  padding: 24px 20px;
+  text-align: center;
+  color: white;
+  margin-bottom: 16px;
+}
+.cta-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; line-height: 1.5; }
+.cta-text { font-size: 0.82rem; opacity: 0.88; line-height: 1.8; margin-bottom: 18px; }
+.cta-btn {
+  display: block;
+  background: white;
+  color: var(--navy-dark);
+  border: none;
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.cta-btn:hover { background: var(--navy-light); }
+
+.retry-btn {
+  display: block;
+  text-align: center;
+  color: rgba(255,255,255,0.65);
+  font-size: 0.78rem;
+  cursor: pointer;
+  margin-top: 8px;
+  background: none;
+  border: none;
+  font-family: inherit;
+  padding: 4px;
+}
+.retry-btn:hover { color: white; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">🔭</div>
+  <div>
+    <div class="header-title">老後資金の見える化チェック</div>
+    <div class="header-sub">今のままで足りそうか、数字で確認できます</div>
+  </div>
+</header>
+
+<main>
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-info">
+      <span id="progressLabel">入力 1 / 5</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div id="questionArea"></div>
+  <div class="result-screen" id="resultScreen"></div>
+</main>
+
+<script>
+// ============================================================
+// 質問定義
+// ============================================================
+const QUESTIONS = [
+  {
+    id: 'age',
+    type: 'number',
+    text: '現在の年齢を教えてください',
+    unit: '歳',
+    placeholder: '40',
+    min: 20, max: 70,
+    required: true,
+  },
+  {
+    id: 'assets',
+    type: 'number',
+    text: '現在の金融資産はどのくらいですか？',
+    hint: '預貯金・投資・保険の積立金など、現在持っているお金の合計（ざっくりでOKです）',
+    unit: '万円',
+    placeholder: '300',
+    min: 0,
+    required: true,
+  },
+  {
+    id: 'monthly_saving',
+    type: 'number',
+    text: '毎月の積立額はどのくらいですか？',
+    hint: 'NISA・iDeCo・貯金など、毎月コツコツ積み立てているお金の合計（現在ゼロでもOKです）',
+    unit: '万円',
+    placeholder: '3',
+    min: 0,
+    required: true,
+  },
+  {
+    id: 'monthly_expense',
+    type: 'number',
+    text: '老後の毎月の生活費のイメージはどのくらいですか？',
+    hint: '現役時代より少し少なめで見積もる方が多いです。わからなければ20〜25万円などで仮入力してください',
+    unit: '万円',
+    placeholder: '25',
+    min: 5,
+    required: true,
+  },
+  {
+    id: 'pension',
+    type: 'number',
+    text: '公的年金の見込み額はどのくらいですか？（月額）',
+    hint: 'ねんきんネットや年金定期便で確認できます。わからなければ月10〜15万円などで仮入力してください',
+    unit: '万円',
+    placeholder: '15',
+    min: 0,
+    required: true,
+  },
+];
+
+const OPTIONAL_QUESTIONS = [
+  {
+    id: 'retire_age',
+    type: 'number',
+    text: '退職予定年齢は何歳ですか？',
+    hint: '未入力の場合は65歳として計算します',
+    unit: '歳',
+    placeholder: '65',
+    min: 50, max: 75,
+    required: false,
+    default: 65,
+  },
+  {
+    id: 'life_expectancy',
+    type: 'number',
+    text: '想定寿命はどのくらいですか？',
+    hint: '未入力の場合は90歳として計算します',
+    unit: '歳',
+    placeholder: '90',
+    min: 75, max: 100,
+    required: false,
+    default: 90,
+  },
+  {
+    id: 'retirement_bonus',
+    type: 'number',
+    text: '退職金の見込みはありますか？',
+    hint: '未入力の場合は0円として計算します',
+    unit: '万円',
+    placeholder: '0',
+    min: 0,
+    required: false,
+    default: 0,
+  },
+];
+
+const ALL_QUESTIONS = [...QUESTIONS, ...OPTIONAL_QUESTIONS];
+const TOTAL = ALL_QUESTIONS.length;
+
+let currentQ = 0;
+let answers = {};
+
+// ============================================================
+// 計算ロジック
+// ============================================================
+function calcResult(a) {
+  const age = parseInt(a.age) || 40;
+  const assets = parseFloat(a.assets) || 0;
+  const monthlySaving = parseFloat(a.monthly_saving) || 0;
+  const monthlyExpense = parseFloat(a.monthly_expense) || 25;
+  const pension = parseFloat(a.pension) || 15;
+  const retireAge = parseInt(a.retire_age) || 65;
+  const lifeExp = parseInt(a.life_expectancy) || 90;
+  const retirementBonus = parseFloat(a.retirement_bonus) || 0;
+
+  const yearsToRetire = Math.max(0, retireAge - age);
+  const retirementPeriod = Math.max(0, lifeExp - retireAge);
+
+  // 月次不足額
+  const monthlyShortage = Math.max(0, monthlyExpense - pension);
+
+  // 老後必要総額
+  const totalNeeded = monthlyShortage * 12 * retirementPeriod;
+
+  // 退職時点の資産（利回り別）
+  function calcRetireAssets(annualRate) {
+    const r = annualRate / 12 / 100;
+    let accumulated = assets * 100; // 万円→万円で計算
+    if (r === 0) {
+      accumulated += monthlySaving * 12 * yearsToRetire;
+    } else {
+      // 複利計算
+      const currentFV = assets * Math.pow(1 + r, yearsToRetire * 12);
+      const savingFV = monthlySaving * ((Math.pow(1 + r, yearsToRetire * 12) - 1) / r);
+      accumulated = currentFV + savingFV;
+    }
+    return accumulated + retirementBonus;
+  }
+
+  const assets1 = calcRetireAssets(1);
+  const assets3 = calcRetireAssets(3);
+  const assets5 = calcRetireAssets(5);
+
+  // 概算不足額（利回り1%基準）
+  const shortage1 = totalNeeded - assets1;
+  const shortage3 = totalNeeded - assets3;
+  const shortage5 = totalNeeded - assets5;
+
+  // 追加積立額（不足を埋めるために必要な月額追加）
+  function calcExtraMonthly(annualRate, shortage) {
+    if (shortage <= 0) return 0;
+    const r = annualRate / 12 / 100;
+    if (r === 0 || yearsToRetire === 0) return shortage / (yearsToRetire * 12 || 1);
+    return shortage / ((Math.pow(1 + r, yearsToRetire * 12) - 1) / r);
+  }
+
+  return {
+    age, assets, monthlySaving, monthlyExpense, pension,
+    retireAge, lifeExp, retirementBonus,
+    yearsToRetire, retirementPeriod,
+    monthlyShortage,
+    totalNeeded: Math.round(totalNeeded),
+    assets1: Math.round(assets1),
+    assets3: Math.round(assets3),
+    assets5: Math.round(assets5),
+    shortage1: Math.round(shortage1),
+    shortage3: Math.round(shortage3),
+    shortage5: Math.round(shortage5),
+    extra1: Math.round(calcExtraMonthly(1, shortage1) * 10) / 10,
+    extra3: Math.round(calcExtraMonthly(3, shortage3) * 10) / 10,
+    extra5: Math.round(calcExtraMonthly(5, shortage5) * 10) / 10,
+  };
+}
+
+function fmt(n) {
+  if (n >= 10000) return `約${Math.round(n/10000)}億円`;
+  if (n >= 1000) return `約${Math.round(n/100)*100}万円`;
+  return `約${Math.round(n)}万円`;
+}
+
+function fmtExact(n) {
+  return n.toLocaleString() + '万円';
+}
+
+// ============================================================
+// 描画
+// ============================================================
+function render() {
+  if (currentQ >= TOTAL) { showResult(); return; }
+  updateProgress();
+
+  const q = ALL_QUESTIONS[currentQ];
+  const area = document.getElementById('questionArea');
+  area.innerHTML = '';
+
+  const isOptional = currentQ >= QUESTIONS.length;
+  const card = document.createElement('div');
+  card.className = 'question-card';
+
+  const labelText = isOptional ? `追加入力 ${currentQ - QUESTIONS.length + 1} / ${OPTIONAL_QUESTIONS.length}（任意）` : `入力 ${currentQ + 1} / ${QUESTIONS.length}`;
+
+  card.innerHTML = `
+    <div class="question-num">${labelText}</div>
+    <div class="question-text">${q.text}</div>
+    ${q.hint ? `<div class="question-hint">${q.hint}</div>` : ''}
+  `;
+
+  const inputWrap = document.createElement('div');
+  inputWrap.className = 'input-wrap';
+
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.placeholder = q.placeholder;
+  input.min = q.min || 0;
+  if (q.max) input.max = q.max;
+  input.value = answers[q.id] !== undefined ? answers[q.id] : '';
+  inputWrap.innerHTML = `<span class="input-unit">${q.unit}</span>`;
+  inputWrap.insertBefore(input, inputWrap.firstChild);
+  card.appendChild(inputWrap);
+
+  if (!q.required) {
+    const skip = document.createElement('div');
+    skip.className = 'skip-text';
+    skip.textContent = '未入力の場合はデフォルト値で計算します';
+    card.appendChild(skip);
+  }
+
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'next-btn';
+  nextBtn.textContent = currentQ === TOTAL - 1 ? '結果を見る →' : '次へ →';
+  nextBtn.addEventListener('click', () => {
+    const val = input.value.trim();
+    if (q.required && val === '') { input.focus(); return; }
+    answers[q.id] = val !== '' ? parseFloat(val) : (q.default ?? '');
+    currentQ++;
+    render();
+  });
+
+  // Enterキーで次へ
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') nextBtn.click();
+  });
+
+  card.appendChild(nextBtn);
+
+  if (currentQ > 0) {
+    const back = document.createElement('button');
+    back.className = 'back-btn';
+    back.textContent = '← 前に戻る';
+    back.addEventListener('click', () => { currentQ--; render(); });
+    card.appendChild(back);
+  }
+
+  area.appendChild(card);
+  input.focus();
+}
+
+function updateProgress() {
+  const pct = Math.round((currentQ / TOTAL) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  const isOptional = currentQ >= QUESTIONS.length;
+  document.getElementById('progressLabel').textContent = isOptional
+    ? `追加入力 ${currentQ - QUESTIONS.length + 1} / ${OPTIONAL_QUESTIONS.length}`
+    : `入力 ${currentQ + 1} / ${QUESTIONS.length}`;
+  document.getElementById('progressPct').textContent = pct + '%';
+}
+
+function showResult() {
+  document.getElementById('progressWrap').style.display = 'none';
+  document.getElementById('questionArea').style.display = 'none';
+
+  const r = calcResult(answers);
+  const resultScreen = document.getElementById('resultScreen');
+  resultScreen.style.display = 'block';
+
+  const mainShortage = r.shortage1;
+  const isSurplus = mainShortage <= 0;
+
+  // ヒーロー表示
+  const heroHTML = `
+    <div class="result-hero">
+      <div class="result-hero-label">現在の前提での概算（年利1%想定）</div>
+      <div class="result-hero-amount ${isSurplus ? 'surplus' : 'shortage'}">
+        ${isSurplus ? '不足の可能性は低い' : fmt(mainShortage) + 'の不足'}
+      </div>
+      <div class="result-hero-sub">
+        ${isSurplus
+          ? '現在の前提では、大きな不足は出にくい可能性があります。\nただし、生活費や働き方の変化で結果は変わります。'
+          : 'この数字は概算です。前提が変わると結果も変わります。\n大切なのは、感覚のままにせず一度数字で整理することです。'}
+      </div>
+    </div>
+  `;
+
+  // カードグリッド
+  const cardsHTML = `
+    <div class="cards-grid">
+      <div class="info-card">
+        <div class="info-card-label">毎月の概算不足額</div>
+        <div class="info-card-value">${r.monthlyShortage.toLocaleString()}<span class="info-card-unit">万円/月</span></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-label">老後に必要な総資金</div>
+        <div class="info-card-value">${fmt(r.totalNeeded)}</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-label">${r.retireAge}歳時点の想定資産</div>
+        <div class="info-card-value" style="color:var(--green)">${fmt(r.assets1)}</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-label">老後期間</div>
+        <div class="info-card-value">${r.retirementPeriod}<span class="info-card-unit">年間</span></div>
+      </div>
+    </div>
+  `;
+
+  // 利回り別比較
+  const rateHTML = `
+    <div class="improvement-card">
+      <div class="improvement-title">📊 想定利回り別の${r.retireAge}歳時点の資産</div>
+      ${[
+        { rate: '年1%', asset: r.assets1, gap: r.shortage1 },
+        { rate: '年3%', asset: r.assets3, gap: r.shortage3 },
+        { rate: '年5%', asset: r.assets5, gap: r.shortage5 },
+      ].map(row => `
+        <div class="rate-row">
+          <span class="rate-label">${row.rate}運用</span>
+          <span class="rate-asset">${fmt(row.asset)}</span>
+          <span class="rate-gap ${row.gap <= 0 ? 'ok' : 'ng'}">
+            ${row.gap <= 0 ? '不足なし ✓' : fmt(row.gap) + '不足'}
+          </span>
+        </div>
+      `).join('')}
+      <div style="font-size:0.7rem;color:var(--text-muted);margin-top:10px;line-height:1.6">
+        ※想定利回りは将来の成果を保証するものではありません
+      </div>
+    </div>
+  `;
+
+  // 追加積立の目安（不足がある場合のみ）
+  let extraHTML = '';
+  if (mainShortage > 0 && r.yearsToRetire > 0) {
+    extraHTML = `
+      <div class="extra-card">
+        <div class="extra-title">💡 毎月あといくら積み立てると近づくか（目安）</div>
+        ${[
+          { rate: '年1%の場合', extra: r.extra1 },
+          { rate: '年3%の場合', extra: r.extra3 },
+          { rate: '年5%の場合', extra: r.extra5 },
+        ].map(row => `
+          <div class="extra-row">
+            <span class="extra-label">${row.rate}</span>
+            <span class="extra-value">月 +${row.extra > 0 ? row.extra.toFixed(1) : 0}万円</span>
+          </div>
+        `).join('')}
+        <div style="font-size:0.7rem;color:var(--yellow);margin-top:8px;line-height:1.5">
+          家計余力とのバランスを確認しながら検討することが大切です
+        </div>
+      </div>
+    `;
+  }
+
+  // 参考配分例
+  const allocHTML = `
+    <button class="allocation-toggle" onclick="toggleAllocation()">📌 参考配分例を見る（教育目的）</button>
+    <div class="allocation-panel" id="allocPanel">
+      <div class="allocation-note">以下は一般的な参考例です。あなた専用の提案ではありません。実際にどの配分が合うかは、家計、他の資産、使う時期、値動きへの耐性で変わります。</div>
+      ${[
+        { name: '安定重視', cash: 20, bond: 50, stock: 30 },
+        { name: '標準型', cash: 10, bond: 40, stock: 50 },
+        { name: '成長重視', cash: 10, bond: 20, stock: 70 },
+      ].map(p => `
+        <div class="allocation-row">
+          <div class="allocation-name">${p.name}</div>
+          <div class="allocation-bars">
+            <div class="bar-cash" style="width:${p.cash}%"></div>
+            <div class="bar-bond" style="width:${p.bond}%"></div>
+            <div class="bar-stock" style="width:${p.stock}%"></div>
+          </div>
+          <div class="allocation-legend">
+            <span class="legend-item"><span class="legend-dot" style="background:#b0c4de"></span>現金 ${p.cash}%</span>
+            <span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>債券 ${p.bond}%</span>
+            <span class="legend-item"><span class="legend-dot" style="background:var(--navy)"></span>株式 ${p.stock}%</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  const disclaimerHTML = `
+    <div class="disclaimer">
+      ※この診断は簡易チェックです。実際の老後資金は、家計・働き方・年金・税金・医療費・介護費等で変わります。想定利回りは将来の成果を保証するものではありません。この診断は個別商品の推奨を行うものではありません。正確な設計には、家計全体の確認が必要です。
+    </div>
+  `;
+
+  const ctaHTML = `
+    <div class="cta-card">
+      <div class="cta-title">数字が見えた今、<br>一度全体で整理してみませんか？</div>
+      <div class="cta-text">老後資金の不安は、投資だけで解決するとは限りません。家計、制度、保障、積立額をまとめて確認すると、今やるべきことが整理しやすくなります。</div>
+      <a href="#" class="cta-btn">個別で整理する →</a>
+      <a href="#" class="cta-btn">老後資金を詳しく確認する →</a>
+    </div>
+    <button class="retry-btn" onclick="resetApp()">↺ もう一度試す</button>
+  `;
+
+  resultScreen.innerHTML = heroHTML + cardsHTML + rateHTML + extraHTML + allocHTML + disclaimerHTML + ctaHTML;
+}
+
+function toggleAllocation() {
+  const panel = document.getElementById('allocPanel');
+  panel.classList.toggle('open');
+}
+
+function resetApp() {
+  currentQ = 0;
+  answers = {};
+  document.getElementById('progressWrap').style.display = 'block';
+  document.getElementById('questionArea').style.display = 'block';
+  document.getElementById('resultScreen').style.display = 'none';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
