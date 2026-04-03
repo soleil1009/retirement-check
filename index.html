@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>老後資金の見える化チェック | Soleil FP</title>
+<link rel="icon" type="image/png" href="logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -330,6 +331,24 @@ main {
 }
 .cta-btn:hover { background: var(--navy-light); }
 
+.copy-btn {
+  display: block;
+  width: 100%;
+  background: white;
+  color: var(--navy-dark);
+  border: none;
+  border-radius: 12px;
+  padding: 13px 20px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+}
+.copy-btn:hover { background: var(--navy-light); }
+.copy-btn.copied { background: var(--navy-light); color: var(--navy); }
+
 .retry-btn {
   display: block;
   text-align: center;
@@ -348,7 +367,7 @@ main {
 <body>
 
 <header>
-  <div class="header-icon">🔭</div>
+  <img src="logo.png" alt="Soleil" style="height:32px;flex-shrink:0;">
   <div>
     <div class="header-title">老後資金の見える化チェック</div>
     <div class="header-sub">今のままで足りそうか、数字で確認できます</div>
@@ -767,10 +786,50 @@ function showResult() {
       <a href="#" class="cta-btn">個別で整理する →</a>
       <a href="#" class="cta-btn">老後資金を詳しく確認する →</a>
     </div>
+    <button class="copy-btn" onclick="copyResult()">📋 この結果をコピーしてLINEで保存する</button>
     <button class="retry-btn" onclick="resetApp()">↺ もう一度試す</button>
   `;
 
   resultScreen.innerHTML = heroHTML + cardsHTML + rateHTML + extraHTML + allocHTML + disclaimerHTML + ctaHTML;
+}
+
+function copyResult() {
+  const r = calcResult(answers);
+  const isSurplus = r.shortage1 <= 0;
+  const lines = [
+    '【老後資金の見える化チェック 診断結果】',
+    '',
+    `現在年齢：${r.age}歳　退職予定：${r.retireAge}歳`,
+    `現在の金融資産：${r.assets.toLocaleString()}万円`,
+    `毎月の積立：${r.monthlySaving}万円`,
+    `老後の生活費：月${r.monthlyExpense}万円`,
+    `年金見込み：月${r.pension}万円`,
+    '',
+    '─────────────────',
+    `毎月の概算不足額：${r.monthlyShortage}万円/月`,
+    `老後に必要な総資金：${r.totalNeeded.toLocaleString()}万円`,
+    `${r.retireAge}歳時点の想定資産（年利1%）：${r.assets1.toLocaleString()}万円`,
+    '',
+    isSurplus ? '▶ 不足の可能性は低い' : `▶ 概算不足額：約${r.shortage1.toLocaleString()}万円`,
+    '',
+    '─────────────────',
+    '利回り別の想定資産',
+    `年1%：${r.assets1.toLocaleString()}万円　不足：${r.shortage1 <= 0 ? 'なし' : r.shortage1.toLocaleString()+'万円'}`,
+    `年3%：${r.assets3.toLocaleString()}万円　不足：${r.shortage3 <= 0 ? 'なし' : r.shortage3.toLocaleString()+'万円'}`,
+    `年5%：${r.assets5.toLocaleString()}万円　不足：${r.shortage5 <= 0 ? 'なし' : r.shortage5.toLocaleString()+'万円'}`,
+    '',
+    '※この診断は簡易チェックです。実際の老後資金は家計・年金・税金等で変わります。',
+  ];
+  const text = lines.join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✓ コピーしました！LINEに貼り付けてください';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 この結果をコピーしてLINEで保存する';
+      btn.classList.remove('copied');
+    }, 3000);
+  });
 }
 
 function toggleAllocation() {
