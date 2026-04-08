@@ -315,8 +315,8 @@ main {
 .cta-text { font-size: 0.82rem; opacity: 0.88; line-height: 1.8; margin-bottom: 18px; }
 .cta-btn {
   display: block;
-  background: white;
-  color: var(--navy-dark);
+  background: var(--navy);
+  color: white;
   border: none;
   border-radius: 12px;
   padding: 14px 20px;
@@ -328,6 +328,7 @@ main {
   margin-bottom: 8px;
   transition: all 0.2s;
   text-decoration: none;
+  text-align: center;
 }
 .cta-btn:hover { background: var(--navy-light); }
 
@@ -335,8 +336,8 @@ main {
   display: block;
   width: 100%;
   background: white;
-  color: var(--navy-dark);
-  border: none;
+  color: var(--navy);
+  border: 1.5px solid var(--navy);
   border-radius: 12px;
   padding: 13px 20px;
   font-size: 0.85rem;
@@ -345,21 +346,26 @@ main {
   cursor: pointer;
   margin-bottom: 8px;
   transition: all 0.2s;
+  text-align: center;
 }
 .copy-btn:hover { background: var(--navy-light); }
 .copy-btn.copied { background: var(--navy-light); color: var(--navy); }
 
 .retry-btn {
   display: block;
-  text-align: center;
+  width: 100%;
+  background: white;
   color: var(--navy);
-  font-size: 0.78rem;
-  cursor: pointer;
-  margin-top: 8px;
-  background: none;
-  border: none;
+  border: 1.5px solid var(--navy-light);
+  border-radius: 12px;
+  padding: 13px 20px;
+  font-size: 0.85rem;
   font-family: inherit;
-  padding: 4px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+  text-align: center;
 }
 .retry-btn:hover { color: white; }
 </style>
@@ -781,7 +787,7 @@ function showResult() {
 
   const ctaHTML = `
     <button class="copy-btn" onclick="copyResult()">📋 この結果をコピーしてLINEで保存する</button>
-    <div class="cta-card"><a href="#" class="cta-btn">LINEに戻る</a></div>
+    <a href="#" class="cta-btn">LINEに戻る</a>
     <button class="retry-btn" onclick="resetApp()">↺ もう一度試す</button>
   `;
 
